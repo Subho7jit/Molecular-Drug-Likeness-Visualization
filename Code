@@ -1,0 +1,67 @@
+# Code for visualization
+import pandas as pd
+import plotly.graph_objects as go
+
+# Sample dataset
+data = {
+    'Molecules': ['1-Octacosanol', 'Hentriacontane', 'Stigmasterol', 'Kaempferol-3-glucoside',
+                  'lupeol', 'flavanone', 'dihydrodibenzoxepin', 'alpha-Camphorene', 
+                  'Myrcene', 'E-Guggulsterone', 'Mukulol'],
+    'Lipinski': ['Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted'],
+    'Pfizer': ['Accepted', 'Rejected', 'Accepted', 'Rejected', 'Rejected', 'Accepted', 'Accepted', 'Accepted', 'Rejected', 'Rejected', 'Rejected'],
+    'GSK': ['Accepted', 'Rejected', 'Rejected', 'Rejected', 'Accepted', 'Accepted', 'Rejected', 'Accepted', 'Accepted', 'Accepted', 'Rejected'],
+    'GoldenTriangle': ['Rejected', 'Rejected', 'Rejected', 'Rejected', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted', 'Accepted']
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Preparing data for Sankey diagram
+labels = list(df['Molecules']) + ['Lipinski', 'Pfizer', 'GSK', 'GoldenTriangle', 'Accepted', 'Rejected']
+source = []
+target = []
+value = []
+color = []
+
+# Assign unique colors to each molecule
+colors = [f'rgba({i*20%255}, {i*40%255}, {i*60%255}, 0.8)' for i in range(len(df['Molecules']))]
+
+for index, row in df.iterrows():
+    molecule_index = labels.index(row['Molecules'])
+    molecule_color = colors[index]
+    
+    for col in ['Lipinski', 'Pfizer', 'GSK', 'GoldenTriangle']:
+        criteria_index = labels.index(col)
+        decision_index = labels.index(row[col])
+
+        # From Molecule to Criteria
+        source.append(molecule_index)
+        target.append(criteria_index)
+        value.append(1)
+        color.append(molecule_color)
+
+        # From Criteria to Decision
+        source.append(criteria_index)
+        target.append(decision_index)
+        value.append(1)
+        color.append(molecule_color)
+
+# Plotting
+fig = go.Figure(data=[go.Sankey(
+    arrangement="snap",
+    orientation="h",
+    node=dict(
+        pad=15,
+        thickness=20,
+        line=dict(color="black", width=0.5),
+        label=labels
+    ),
+    link=dict(
+        source=source,
+        target=target,
+        value=value,
+        color=color
+    ))])
+
+fig.update_layout(title_text="Alluvial Plot for Molecules", font_size=10)
+fig.show()
